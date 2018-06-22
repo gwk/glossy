@@ -8,7 +8,7 @@ from sys import stdout
 from html import escape as html_escape
 from itertools import chain
 from types import TracebackType
-from typing import Any, ContextManager, Dict, List, Optional, TextIO, Tuple, Type, Union
+from typing import Any, ContextManager, Dict, List, Optional, TextIO, Tuple, Type, Union, Iterable
 
 
 FileOrPath = Union[TextIO, str]
@@ -168,7 +168,7 @@ class SvgWriter(ContextManager):
     return self.tree('marker', id=id,viewBox=f'{vx} {vy} {vw} {vh}', **attrs)
 
 
-  def path(self, *commands:PathCommand, **attrs:Any) -> None:
+  def path(self, commands:Iterable[PathCommand], **attrs:Any) -> None:
     'Output an SVG `path` element.'
     assert 'd' not in attrs
     cmd_strs:List[str] = []
@@ -181,7 +181,7 @@ class SvgWriter(ContextManager):
       cmd_strs.append(code + ','.join(str(x) for x in c[1:]))
     self.leaf('path', d=' '.join(cmd_strs), **attrs)
 
-  def polyline(self, *points:Tuple, **attrs:Any) -> None:
+  def polyline(self, points:Iterable[Tuple], **attrs:Any) -> None:
     point_strs:List[str] = []
     assert 'points' not in attrs
     for p in points:
