@@ -63,6 +63,7 @@ class XYChart:
 
 
   def render(self, file=None) -> str:
+    colors:List = ['#EF7F6D', '#F78398', '#E893C4', '#C2AAE5', '#89C2F3', '#49D5E9', '#38E2CA', '#70E9A0', '#AFEB77', '#EFE55D']
     if file is None:
       file = StringIO()
     chart_x_min:int = self.legend_width + self.label_width + 10
@@ -72,19 +73,23 @@ class XYChart:
     with SvgWriter(file, w=self.svg_width, h=self.svg_height) as svg:
       y_range = chart_y_max - chart_y_min
       #draw graph
-      svg.rect(pos=(chart_x_min, chart_y_min), size=(chart_x_max-chart_x_min, chart_y_max - chart_y_min), stroke=None, fill='#e5e5e5')
+      svg.rect(pos=(chart_x_min, chart_y_min), size=(chart_x_max-chart_x_min, chart_y_max - chart_y_min), stroke=None, fill='#fafafa')
       transform_x =  700
+      color_picker = 0
       with svg.g(transform=f'translate({chart_x_min} {chart_y_max}) scale(1 -1) '):
         for i in range(1,5):
-            svg.line((0, (y_range/5)*i), (chart_x_max-70, (y_range/5)*i), stroke='black', stroke_dasharray='4')
+            svg.line((0, (y_range/5)*i), (chart_x_max-70, (y_range/5)*i), stroke='#BBCCDD' )
             with svg.g(transform=' scale(1 -1) '):
-              svg.text(text=((self.y_max-self.y_min)/5*i), x = -40, y = -((y_range/5)*i), style="color:black") #max y
+              svg.text(text=((self.y_max-self.y_min)/5*i), x = -40, y = -((y_range/5)*i) + 6, style="color:black") #max y
         for k,s in self.series.items(): #each series
           for p in s:
             print(p)
-          svg.polyline((p for p in s), style='fill:none;stroke:red;stroke-width:1')
+          svg.polyline((p for p in s), style=f'fill:none;stroke:{colors[color_picker]};stroke-width:1')
+          color_picker = (1+color_picker) % 10
+          print(color_picker)
+
       #text
-      svg.text(text=self.title, x=self.svg_width/1.9, y = self.label_height*1.4, style="color:black") #title
+      svg.text(text=self.title, x=self.svg_width/1.9, y = self.label_height*1.4, style=f"color:black;font-size:{self.title_height}") #title
       svg.text(text=self.y_label, x=0, y = self.svg_height/2, style="color:black") #x axis
       svg.text(text=self.x_label, x=self.svg_width/2, y = self.svg_height, style="color:black") #y axis
       svg.text(text=str(self.x_min), x = chart_x_min, y = (chart_y_max+15), style="color:black") #min x
