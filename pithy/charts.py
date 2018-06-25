@@ -5,7 +5,7 @@ from typing import *
 class XYChart:
   def __init__(self, *series:Tuple[str, Iterable[Tuple]],
    title:str=None,
-   x_label:str=None, y_label:str=None,
+   x_label:str=None, y_label:str=None, numb_y_labels:int=0,
    w:int=None, h:int=None,
    plot_w:int=None, plot_h:int=None,
    x_min:int=None, x_max:int=None, y_min:int=None, y_max:int=None,
@@ -45,9 +45,10 @@ class XYChart:
     self.title = title
     self.x_label = x_label
     self.y_label = y_label
+    self.numb_y_labels = numb_y_labels
 
     x_scale = ((self.svg_width - 10) - (self.legend_width + self.label_width + 10))/x_range
-    y_scale = ((self.svg_height - self.title_height)-(self.label_height+10))/y_range
+    y_scale = ((self.svg_height - self.title_height)-(self.label_height+10)-20)/y_range
     scaled_min_x=0
     scaled_min_y=0
     for k,s in self.series.items():
@@ -69,7 +70,7 @@ class XYChart:
     chart_x_min:int = self.legend_width + self.label_width + 10
     chart_x_max:int = self.svg_width - 10
     chart_y_min:int = self.label_height+10
-    chart_y_max:int = self.svg_height - self.title_height
+    chart_y_max:int = self.svg_height - self.title_height - 20
     with SvgWriter(file, w=self.svg_width, h=self.svg_height) as svg:
       y_range = chart_y_max - chart_y_min
       #draw graph
@@ -77,26 +78,36 @@ class XYChart:
       transform_x =  700
       color_picker = 0
       with svg.g(transform=f'translate({chart_x_min} {chart_y_max}) scale(1 -1) '):
-        for i in range(1,5):
-            svg.line((0, (y_range/5)*i), (chart_x_max-70, (y_range/5)*i), stroke='#BBCCDD' )
+        for i in range(1,self.numb_y_labels):
+            svg.line((0, (y_range/self.numb_y_labels)*i), (chart_x_max-chart_x_min, (y_range/self.numb_y_labels)*i), stroke='#e2e2e2' )
             with svg.g(transform=' scale(1 -1) '):
-              svg.text(text=((self.y_max-self.y_min)/5*i), x = -40, y = -((y_range/5)*i) + 6, style="color:black") #max y
+              svg.text(text=((self.y_max-self.y_min)/self.numb_y_labels*i), x = -40, y = -((y_range/self.numb_y_labels)*i) + 6, style="color:black") #max y
         for k,s in self.series.items(): #each series
           for p in s:
             print(p)
           svg.polyline((p for p in s), style=f'fill:none;stroke:{colors[color_picker]};stroke-width:1')
           color_picker = (1+color_picker) % 10
           print(color_picker)
+        #vertical ticks
 
       #text
       svg.text(text=self.title, x=self.svg_width/1.9, y = self.label_height*1.4, style=f"color:black;font-size:{self.title_height}") #title
-      svg.text(text=self.y_label, x=0, y = self.svg_height/2, style="color:black") #x axis
-      svg.text(text=self.x_label, x=self.svg_width/2, y = self.svg_height, style="color:black") #y axis
+      svg.text(text=self.y_label, x=0, y = self.svg_height/2, style="color:black") #y axis
+      svg.text(text=self.x_label, x=self.svg_width/2, y = self.svg_height - 15, style="color:black") #x axis
       svg.text(text=str(self.x_min), x = chart_x_min, y = (chart_y_max+15), style="color:black") #min x
       svg.text(text=str(self.y_min), x = chart_x_min-10, y = (chart_y_max), style="color:black") #min y
       svg.text(text=str(self.x_max), x = chart_x_max-20, y = (chart_y_max+15), style="color:black") #max x
       svg.text(text=str(self.y_max), x = chart_x_min-25, y = (chart_y_min+10), style="color:black") #max y
-      #horizontal lines
+
+      #legend
+      counter:int = 0
+      color_picker = 0
+      for k,s in self.series.items():
+        svg.text(text=k, x = counter*(self.svg_width/(len(self.series.items()))), y = self.svg_height , style="color:black") #max y
+        svg.rect(pos=(25+counter*(self.svg_width/(len(self.series.items()))),  self.svg_height-10), size=(10, 10), stroke=None, fill=f'{colors[color_picker]}')
+        counter += 1
+        color_picker += 1
+
 
 
 
